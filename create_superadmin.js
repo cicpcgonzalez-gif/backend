@@ -24,8 +24,15 @@ const bcrypt = require('bcryptjs');
       console.log('Superadmin ya existe:', existing.email);
     } else {
       const hashed = await bcrypt.hash(passwordPlain, 10);
-      await prisma.user.create({ data: { email, name: 'Super Admin', password: hashed } });
-      console.log('Superadmin creado correctamente');
+      // Intentamos crear con campo `role` si existe en el esquema; si falla, intentamos sin role.
+      try {
+        await prisma.user.create({ data: { email, name: 'Super Admin', password: hashed, role: 'superadmin' } });
+        console.log('Superadmin creado correctamente (with role)');
+      } catch (err) {
+        console.warn('No se pudo crear con campo role (posible esquema sin role), intentando sin role:', err.message || err);
+        await prisma.user.create({ data: { email, name: 'Super Admin', password: hashed } });
+        console.log('Superadmin creado correctamente (without role)');
+      }
     }
 
     await prisma.$disconnect();
