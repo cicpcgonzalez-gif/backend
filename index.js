@@ -57,11 +57,12 @@ async function ensureSuperAdmin() {
     const existing = await prisma.user.findUnique({ where: { email: SUPERADMIN_EMAIL } });
     if (!existing) {
       const hashed = await bcrypt.hash(SUPERADMIN_PASSWORD, 10);
+      // El modelo User en Prisma no contiene el campo `role`, por eso
+      // creamos el usuario sin ese campo para evitar errores.
       await prisma.user.create({
         data: {
           email: SUPERADMIN_EMAIL,
           password: hashed,
-          role: SUPERADMIN_ROLE,
           name: 'Super Admin',
         }
       });
